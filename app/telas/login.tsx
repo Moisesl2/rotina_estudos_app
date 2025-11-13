@@ -1,79 +1,105 @@
 import { useRouter } from "expo-router";
+import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import CustomButton from "./CustomButton";
+import LoginModal from "./LoginModal";
 
-export default function Home() {
-    const router = useRouter();
+function login() {
+  const router = useRouter();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [userType, setUserType] = useState<"Professor" | "Aluno">("Professor");
 
-    const handleProfessorLogin = () => {
-        // No futuro: router.push("/professor")
-        alert("Login como Professor");
-    };
+  const openModal = (type: "Professor" | "Aluno") => {
+    setUserType(type);
+    setModalVisible(true);
+  };
 
-    const handleAlunoLogin = () => {
-        // No futuro: router.push("/aluno")
-        alert("Login como Aluno");
-    };
+  const closeModal = () => {
+    setModalVisible(false);
+  };
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Área de Login</Text>
-            <Text style={styles.subtitle}>Selecione seu tipo de acesso</Text>
+  return (
+    <View style={styles.container}>
+      {/* Container principal centralizado */}
+      <View style={styles.innerContainer}>
+        {/* Título da aplicação */}
+        <Text style={styles.title}>Bem-vindo ao Sistema</Text>
 
-            <TouchableOpacity style={[styles.button, styles.professorButton]} onPress={handleProfessorLogin}>
-                <Text style={styles.buttonText}>Entrar como Professor</Text>
-            </TouchableOpacity>
+        {/* Botão para Professor */}
+        <CustomButton
+          title="Professor"
+          onPress={() => openModal("Professor")}
+          color="#2563EB"
+        />
 
-            <TouchableOpacity style={[styles.button, styles.alunoButton]} onPress={handleAlunoLogin}>
-                <Text style={styles.buttonText}>Entrar como Aluno</Text>
-            </TouchableOpacity>
+        {/* Botão para Aluno */}
+        <CustomButton
+          title="Aluno"
+          onPress={() => openModal("Aluno")}
+          color="#7C3AED"
+        />
 
-            <TouchableOpacity onPress={() => router.push('/telas/cadastro')}> 
-                <Text style={styles.link}>Não tem uma conta? Cadastre-se</Text>
-            </TouchableOpacity>
-        </View>
-    );
+        <TouchableOpacity
+          style={styles.registerButton}
+          onPress={() => router.push("/telas/cadastro")}
+        >
+          <Text style={styles.registerText}>
+            Não tem conta? <Text style={styles.registerLink}>Cadastre-se</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Modal de Login */}
+      <LoginModal
+        visible={modalVisible}
+        onClose={closeModal}
+        userType={userType}
+        onLoginSuccess={(user) => {
+          console.log('Login bem-sucedido, navegando para turmas');
+          router.push({
+            pathname: "/telas/homescreen",
+            params: { userType: user } // passa tipo de usuário
+          });
+        }}
+
+      />
+
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "#fff",
-        padding: 20,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: "bold",
-        marginBottom: 10,
-        color: "#1d3557",
-    },
-    subtitle: {
-        fontSize: 16,
-        color: "#666",
-        marginBottom: 40,
-    },
-    button: {
-        width: "100%",
-        height: 55,
-        borderRadius: 10,
-        justifyContent: "center",
-        alignItems: "center",
-        marginVertical: 10,
-    },
-    professorButton: {
-        backgroundColor: "#e63946", // vermelho suave
-    },
-    alunoButton: {
-        backgroundColor: "#457b9d", // azul suave
-    },
-    buttonText: {
-        color: "#fff",
-        fontSize: 18,
-        fontWeight: "600",
-    },
-    link: {
-        color: '#007bff',
-        marginTop: 8,
-    },
+  container: {
+    flex: 1,
+    backgroundColor: "#4A90E2",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  innerContainer: {
+    width: "100%",
+    maxWidth: 360,
+    gap: 24,
+  },
+  title: {
+    textAlign: "center",
+    color: "#FFF",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 48,
+  },
+    registerButton: {
+    marginTop: 16,
+    alignItems: "center",
+  },
+  registerText: {
+    color: "#FFF",
+    fontSize: 16,
+  },
+  registerLink: {
+    color: "#FFD700",
+    fontWeight: "bold",
+  },
 });
+
+export default login;
