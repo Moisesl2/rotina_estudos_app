@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Checkbox from 'expo-checkbox';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -5,43 +6,86 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 
 export default function Cadastro() {
   const router = useRouter();
-  const [tipoConta, setTipoConta] = useState('aluno'); // valor inicial
+  const [tipoConta, setTipoConta] = useState<'Aluno' | 'Professor'>('Aluno'); 
+  const [nome, setNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+
+  const handleCadastrar = async () => {
+    if (!nome || !email || !senha) {
+      alert("Preencha todos os campos!");
+      return;
+    }
+
+    try {
+      // Salva os dados do usuário no AsyncStorage
+      await AsyncStorage.setItem("userName", nome);
+      await AsyncStorage.setItem("userType", tipoConta);
+      await AsyncStorage.setItem("userEmail", email);
+      await AsyncStorage.setItem("userPassword", senha); // opcional, se quiser salvar a senha local
+
+      // Redireciona para a tela de Login
+      router.push("/telas/login");
+    } catch (error) {
+      console.log("Erro ao salvar usuário:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Cadastro de Usuário</Text>
-        <View style={styles.checkboxGroup}>
-            <View style={styles.checkboxOption}>
-                <Checkbox
-                    value={tipoConta === 'aluno'}
-                    onValueChange={() => setTipoConta('aluno')}
-                    color={tipoConta === 'aluno' ? '#e63946' : undefined}
-                />
-                <Text style={styles.checkboxLabel}>Aluno</Text>
-            </View>
-            <View style={styles.checkboxOption}>
-                <Checkbox
-                    value={tipoConta === 'professor'}
-                    onValueChange={() => setTipoConta('professor')}
-                    color={tipoConta === 'professor' ? '#e63946' : undefined}
-                />
-                <Text style={styles.checkboxLabel}>Professor</Text>
-            </View>
+
+      {/* Seleção do tipo de conta */}
+      <View style={styles.checkboxGroup}>
+        <View style={styles.checkboxOption}>
+          <Checkbox
+            value={tipoConta === 'Aluno'}
+            onValueChange={() => setTipoConta('Aluno')}
+            color={tipoConta === 'Aluno' ? '#e63946' : undefined}
+          />
+          <Text style={styles.checkboxLabel}>Aluno</Text>
         </View>
+        <View style={styles.checkboxOption}>
+          <Checkbox
+            value={tipoConta === 'Professor'}
+            onValueChange={() => setTipoConta('Professor')}
+            color={tipoConta === 'Professor' ? '#e63946' : undefined}
+          />
+          <Text style={styles.checkboxLabel}>Professor</Text>
+        </View>
+      </View>
 
-        <TextInput style={styles.input} placeholder="Nome completo" />
-        <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-        <TextInput style={styles.input} placeholder="Senha" secureTextEntry />
+      {/* Campos de cadastro */}
+      <TextInput
+        style={styles.input}
+        placeholder="Nome completo"
+        value={nome}
+        onChangeText={setNome}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Senha"
+        secureTextEntry
+        value={senha}
+        onChangeText={setSenha}
+      />
 
+      {/* Botão cadastrar */}
+      <TouchableOpacity style={styles.button} onPress={handleCadastrar}>
+        <Text style={styles.buttonText}>Cadastrar</Text>
+      </TouchableOpacity>
 
-
-        <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Cadastrar</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.navigate("/telas/login")}>
-            <Text style={styles.link}>Já tem uma conta? Faça login</Text>
-        </TouchableOpacity>
+      {/* Link para login */}
+      <TouchableOpacity onPress={() => router.push("/telas/login")}>
+        <Text style={styles.link}>Já tem uma conta? Faça login</Text>
+      </TouchableOpacity>
     </View>
   );
 }

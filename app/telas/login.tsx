@@ -1,7 +1,7 @@
 import { useRouter } from "expo-router";
+import { GraduationCap, Users } from "lucide-react-native"; // ÍCONES AQUI
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import CustomButton from "./CustomButton";
 import LoginModal from "./LoginModal";
 
 function login() {
@@ -20,24 +20,26 @@ function login() {
 
   return (
     <View style={styles.container}>
-      {/* Container principal centralizado */}
       <View style={styles.innerContainer}>
-        {/* Título da aplicação */}
-        <Text style={styles.title}>Bem-vindo ao Sistema</Text>
+        <Text style={styles.title}>Bem-vindo(a) ao nosso aplicativo</Text>
 
-        {/* Botão para Professor */}
-        <CustomButton
-          title="Professor"
+        {/* Botão Professor */}
+        <TouchableOpacity
+          style={[styles.roleButton, { backgroundColor: "#2563EB" }]}
           onPress={() => openModal("Professor")}
-          color="#2563EB"
-        />
+        >
+          <GraduationCap size={26} color="#FFF" style={{ marginRight: 10 }} />
+          <Text style={styles.roleButtonText}>Sou Professor</Text>
+        </TouchableOpacity>
 
-        {/* Botão para Aluno */}
-        <CustomButton
-          title="Aluno"
+        {/* Botão Aluno */}
+        <TouchableOpacity
+          style={[styles.roleButton, { backgroundColor: "#7C3AED" }]}
           onPress={() => openModal("Aluno")}
-          color="#7C3AED"
-        />
+        >
+          <Users size={26} color="#FFF" style={{ marginRight: 10 }} />
+          <Text style={styles.roleButtonText}>Sou Aluno</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.registerButton}
@@ -49,21 +51,17 @@ function login() {
         </TouchableOpacity>
       </View>
 
-      {/* Modal de Login */}
       <LoginModal
         visible={modalVisible}
         onClose={closeModal}
         userType={userType}
         onLoginSuccess={(user) => {
-          console.log('Login bem-sucedido, navegando para turmas');
           router.push({
             pathname: "/telas/homescreen",
-            params: { userType: user } // passa tipo de usuário
+            params: { userType: user }
           });
         }}
-
       />
-
     </View>
   );
 }
@@ -88,7 +86,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 48,
   },
-    registerButton: {
+  roleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+  },
+  roleButtonText: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  registerButton: {
     marginTop: 16,
     alignItems: "center",
   },

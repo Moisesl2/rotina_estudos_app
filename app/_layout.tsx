@@ -3,6 +3,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useColorScheme } from "react-native";
 
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -18,6 +19,20 @@ export default function RootLayout() {
 
         <Stack.Screen
           name="telas/cadastro"
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        <Stack.Screen
+          name="telas/homescreen"
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        <Stack.Screen
+          name="telas/turmas"
           options={{
             headerShown: false,
           }}
