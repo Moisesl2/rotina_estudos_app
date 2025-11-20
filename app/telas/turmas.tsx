@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Animated,
   FlatList,
   StyleSheet,
   Text,
@@ -9,16 +10,22 @@ import {
   View
 } from "react-native";
 
+import { Ionicons } from "@expo/vector-icons";
+
 import { ClipboardList, Plus } from "lucide-react-native";
+import MenuLateral from "./menuLateral";
 import ModalAdicionarTarefa from "./modalAdicionarTarefa";
 
 export default function TurmaScreen() {
-  const { turmaId, turmaNome, userType, userName } = useLocalSearchParams<{
+  const { turmaId, turmaNome, userType } = useLocalSearchParams<{
     turmaId: string;
     turmaNome: string;
     userType: "Aluno" | "Professor";
-    userName: string;
+  
   }>();
+
+  const drawerAnim = useRef(new Animated.Value(-300)).current;  // começa fora da tela
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
 
   const [tarefas, setTarefas] = useState<string[]>([]);
@@ -26,6 +33,24 @@ export default function TurmaScreen() {
 
   const [nomeLocal, setNomeLocal] = useState("");
   const [tipoLocal, setTipoLocal] = useState("");
+
+  //Abertura e fechamento da drawer
+  const openDrawer = () => {
+    setDrawerOpen(true);
+    Animated.timing(drawerAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const closeDrawer = () => {
+    Animated.timing(drawerAnim, {
+      toValue: -300,
+      duration: 300,
+      useNativeDriver: false,
+    }).start(() => setDrawerOpen(false));
+  };
 
   useEffect(() => {
     carregarTarefas();
@@ -74,39 +99,59 @@ export default function TurmaScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Turma: {turmaNome}</Text>
-      <Text style={styles.infoText}>ID da Turma: {turmaId}</Text>
-      <Text style={styles.infoText}>Usuário: {nomeLocal}</Text>
-      <Text style={styles.infoText}>Tipo: {tipoLocal}</Text>
+      {/* BOTÃO PARA ABRIR O DRAWER (só aparece quando está fechado) */}
+      {!drawerOpen && (
+        <>
 
+          {/* LINHA DOS BOTÕES */}
+          <View style={styles.rowButtons}>
 
-      {/* BOTÃO PARA ADICIONAR TAREFA */}
-      {userType === "Professor" && (
-        <TouchableOpacity
-          style={styles.addTaskButton}
-          onPress={() => setModalVisible(true)}
-        >
-          <ClipboardList size={26} color="#fff" style={{ marginRight: 8 }} />
-          <Plus size={26} color="#fff" />
-        </TouchableOpacity>
-      )}
+            <TouchableOpacity onPress={openDrawer} style={styles.btnDrawer}>
+              <Ionicons name="menu" size={28} color="#fff" />
+            </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>Tarefas da Turma</Text>
+            {userType === "Professor" && (
+              <TouchableOpacity
+                style={styles.addTaskButton}
+                onPress={() => setModalVisible(true)}
+              >
+                <ClipboardList size={26} color="#fff" style={{ marginRight: 8 }} />
+                <Plus size={26} color="#fff" />
+              </TouchableOpacity>
+            )}
 
-      {tarefas.length === 0 ? (
-        <Text style={styles.noTasks}>Nenhuma tarefa cadastrada.</Text>
-      ) : (
-        <FlatList
-          data={tarefas}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.taskItem}>
-              <Text style={styles.taskText}>• {item}</Text>
-            </View>
+          </View>
+
+          {/* TÍTULO DAS TAREFAS */}
+          <Text style={styles.sectionTitle}>Tarefas da Turma</Text>
+
+          {/* LISTA DE TAREFAS */}
+          {tarefas.length === 0 ? (
+            <Text style={styles.noTasks}>Nenhuma tarefa cadastrada.</Text>
+          ) : (
+            <FlatList
+              data={tarefas}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.taskItem}>
+                  <Text style={styles.taskText}>• {item}</Text>
+                </View>
+              )}
+            />
           )}
-        />
-      )}
 
+        </>
+      )}
+      {/* Drawer importado */}
+      <MenuLateral
+        open={drawerOpen}
+        onClose={closeDrawer}
+        drawerAnim={drawerAnim}
+        turmaNome={turmaNome}
+        turmaId={turmaId}
+        nomeLocal={nomeLocal}
+        tipoLocal={tipoLocal}
+      />
       {/* MODAL */}
       <ModalAdicionarTarefa
         visible={modalVisible}
@@ -119,14 +164,21 @@ export default function TurmaScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#fff" },
+  rowButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    marginTop: 40
+  },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 15, marginTop: 40 },
   infoText: {
     fontSize: 16,
     color: "#444",
     marginBottom: 4,
   },
-
-
   addTaskButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -134,7 +186,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     width: 80,
-    marginTop: 10,
   },
 
   sectionTitle: { fontSize: 18, marginTop: 25, fontWeight: "bold" },
@@ -147,4 +198,13 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   taskText: { fontSize: 16 },
+
+  // Estilo do botão do drawer
+  btnDrawer: {
+    backgroundColor: "#6A1B9A",
+    padding: 8,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });

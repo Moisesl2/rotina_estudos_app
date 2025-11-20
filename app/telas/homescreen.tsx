@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CriarTurmaModal from "./criarTurmaModal";
 
@@ -15,11 +16,12 @@ interface CardProps {
   titulo: CardTipo;
   turmas: Turma[];
   userType: "Aluno" | "Professor";
+  tarefasCount: Record<string, number>;
   onPressTurma: (turma: Turma) => void;
   onCriarTurma?: (cardTitulo: CardTipo) => void;
 }
 
-const Card = ({ titulo, turmas, userType, onPressTurma, onCriarTurma }: CardProps) => {
+const Card = ({ titulo, turmas, userType, tarefasCount, onPressTurma, onCriarTurma }: CardProps) => {
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>{titulo}</Text>
@@ -30,7 +32,16 @@ const Card = ({ titulo, turmas, userType, onPressTurma, onCriarTurma }: CardProp
           style={styles.turmaButton}
           onPress={() => onPressTurma(turma)}
         >
-          <Text style={styles.turmaText}>{turma.nome}</Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+            <Text style={styles.turmaText}>{turma.nome}</Text>
+
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {tarefasCount[turma.id] ?? 0}
+              </Text>
+            </View>
+
+          </View>
         </TouchableOpacity>
       ))}
 
@@ -53,6 +64,8 @@ export default function HomeScreen() {
   // const [userType] = useState<"Aluno" | "Professor">(userTypeParam || "Aluno");
   const [userType, setUserType] = useState<"Aluno" | "Professor">("Aluno"); 
   const [userName, setUserName] = useState<string>(""); // estado para armazenar o nome
+  const [tarefasCount, setTarefasCount] = useState<Record<string, number>>({});
+
 
   // ==============================
   // 1. Estado das turmas
@@ -69,10 +82,18 @@ export default function HomeScreen() {
   // 2. Carregar turmas do AsyncStorage ao abrir
   // ==============================
   useEffect(() => {
-    carregarTurmas();
+    // carregarTurmas();
     carregarNomeUsuario();
     carregarTipoUsuario();
   }, []);
+
+  // Recarrega quando voltar para Home
+  useFocusEffect(
+    useCallback(() => {
+      carregarTurmas(); // isso também chama carregarQuantidadeTarefas()
+    }, [])
+  );
+
 
   const carregarNomeUsuario = async () => {
     try {
@@ -113,10 +134,35 @@ export default function HomeScreen() {
       }
 
       setTurmasData(novasTurmas);
+
+      
+      // 🔥 carregar quantidade de tarefas
+      carregarQuantidadeTarefas(novasTurmas);
     } catch (error) {
       console.log("Erro ao carregar turmas:", error);
     }
   };
+
+  //Carregar contagem de tarefas por turma
+    const carregarQuantidadeTarefas = async (turmas: Record<CardTipo, Turma[]>) => {
+    try {
+      const counts: Record<string, number> = {};
+
+      for (const categoria of Object.keys(turmas) as CardTipo[]) {
+        for (const turma of turmas[categoria]) {
+          const chave = `tarefas_${turma.id}`;
+          const dados = await AsyncStorage.getItem(chave);
+          const lista = dados ? JSON.parse(dados) : [];
+          counts[turma.id] = lista.length;
+        }
+      }
+
+      setTarefasCount(counts);
+    } catch (error) {
+      console.log("Erro ao carregar quantidade de tarefas:", error);
+    }
+  };
+
 
   // ==============================
   // 3. Salvar turmas localmente
@@ -195,6 +241,7 @@ export default function HomeScreen() {
           key={card}
           titulo={card}
           turmas={turmasData[card]}
+          tarefasCount={tarefasCount}
           userType={userType}
           onPressTurma={handlePressTurma}
           onCriarTurma={userType === "Professor" ? handleCriarTurmaClick : undefined}
@@ -226,7 +273,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
   },
-  turmaText: { color: "#fff", textAlign: "center" },
+  turmaText: { color: "#fff", textAlign: "center", marginLeft: 10, fontWeight: "bold" },
   criarButton: {
     marginTop: 8,
     padding: 10,
@@ -236,4 +283,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   criarText: { color: "#DC2626", fontWeight: "bold" },
+
+  badge: {
+    backgroundColor: "#6A1B9A",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+
+  badgeText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+
 });
