@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import CriarTurmaModal from "./criarTurmaModal";
 
 type CardTipo = "Sopro" | "Corda" | "Percussao";
@@ -223,7 +223,12 @@ export default function HomeScreen() {
   };
 
   return (
-    <View style={{ flex: 1, padding: 20, backgroundColor: "#f5f5f5" }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: "#f5f5f5" }}
+      contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+      showsVerticalScrollIndicator={false}
+    >
+
       <Text
         style={{
           fontSize: 24,
@@ -254,7 +259,7 @@ export default function HomeScreen() {
         onConfirm={handleConfirmarCriarTurma}
         cardTitulo={modalCardTitulo}
       />
-    </View>
+    </ScrollView>
   );
 }
 
